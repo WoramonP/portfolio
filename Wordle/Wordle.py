@@ -63,18 +63,20 @@ while True:
         while True:
             guess = input(f"Attempt #{attempt_count}. Enter your word: ").upper()
             if len(guess) == word_length and guess.isalpha():
-                letters_banned_but_used = {letter for letter in guess if letter in letters_banned}
-                if len(letters_banned_but_used) == 0:
-                    if play_mode == 'n' and guess not in allowed_words:
-                        print("Sorry. Not a recognized word.")
-                    else:
+                if play_mode == 'n' and guess not in allowed_words:
+                    print("Sorry. Not a recognized word.")
+                else:
+                    letters_banned_but_used = {letter for letter in guess if letter in letters_banned}
+                    if len(letters_banned_but_used) == 0:
                         break
-                elif len(letters_banned_but_used) == 1:
-                    print(f"Can't contain letter {''.join(letters_banned_but_used)}. \
-You know it's not in the answer.")
-                else:  # len(letters_banned_but_used) > 1
-                    print(f"Can't contain letters {', '.join(letters_banned_but_used)}. \
-You know they're not in the answer.")
+                    else:
+                        print(f"You know the answer doesn't contain {', '.join(letters_banned_but_used)}.")
+                        proceed_with_banned = input(f"Type 'y' to confirm guessing {guess}. \
+Or press enter to try another word.\n>> ").lower()
+                        if proceed_with_banned == "y":
+                            break
+                        else:
+                            continue
             else:
                 print(f"Please enter a {word_length}-letter combination.")
 
