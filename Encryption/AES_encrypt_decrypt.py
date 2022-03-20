@@ -30,4 +30,4 @@ print(type(decrypted), "length:", len(decrypted), decrypted)
 decrypted_string = unpad(decrypted, AES_bytes).decode('utf-8')  # unpad and convert to string
 print(type(decrypted_string), "length:", len(decrypted_string), decrypted_string)
 
-assert(decrypted_string == string_to_encrypt)
+assert decrypted_string == string_to_encrypt
