@@ -1,0 +1,173 @@
+---
+title: "Google Data Analytics capstone project: Fitabase wellness data analysis"
+author: "Woramon P."
+date: "2022-07-29"
+output: html_document
+---
+
+# Introduction
+This project analyzes wellness data from fitness trackers to find wellness trends and how they can be used to influence business marketing strategy.
+
+The analyst received the following questions from the stakeholders at Bellabeat, a high-tech wellness product company:
+
+* What are some trends in smart device usage?
+* How could these trends apply to Bellabeat customers?
+* How could these trends help influence Bellabeat marketing strategy?
+
+The analyst asked the following questions regarding wellness trends:
+
+* Are users more active on a particular day of the week?
+* Is there a relationship between sedentary time and sleep duration each day?
+
+# Data source
+The stakeholder provided the analyst with the following data set: FitBit Fitness Tracker Data (CC0: Public Domain, dataset made available through Mobius), available [here](https://www.kaggle.com/datasets/arashnic/fitbit). 
+
+The analyst first processed tables in the data set using SQL in BigQuery, the result of which is "BigQuery_result.csv" which will be used in the following analysis. Refer to a separate file for the BigQuery code.
+
+# Getting to know the data
+To perform analysis, install and load the following packages.
+```{r}
+library(tidyverse)
+library(readr)
+```
+
+Import data and view its structure. It has 23 columns such as:
+
+* user_id: Representing each of the 33 users
+* date_: Ranging from 2016-04-12 to 2016-05-12.
+* time_: Time of day
+* day: From 1 to 7, representing Sunday to Saturday
+* daily_minutes_asleep: Amount of sleep per day
+* daily_minutes_1sedentary: Amount of sedentary time per day
+* daily_minutes_2lightlyactive: Amount of lightly active time per day
+* daily_minutes_3fairlyactive: Amount of fairly time per day
+* daily_minutes_4veryactive: Amount of very time per day
+* and so on
+```{r}
+df0 <- read_csv("BigQuery_result.csv")
+colnames(df0)
+```
+
+Currently, data in the user_id column is in a numeric data type. The analyst converts them into characters and shorten them to just the first 4 numbers for easy reference.
+```{r}
+chr <- as.character(df0$user_id)
+df0$user_id <- substr(chr, 1, 4)
+unique(df0$user_id)
+```
+
+The analyst takes a look at data distribution. First, she checks how many rows of data there are for each user and finds that some users provide fewer data than others.
+```{r}
+ggplot(data=df0, aes(x=user_id)) + geom_bar() + theme(axis.text.x = element_text(angle = 45))
+```
+
+She checks how many rows of data there are from different dates and finds that there are more data from early days of data collection.
+```{r}
+ggplot(data=df0, aes(x=date_)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45))
+```
+
+She checks how many rows of data there are from different times of the day and finds that there are slightly more data from early in the day.
+```{r}
+ggplot(data=df0, aes(x=time_)) + geom_bar() + 
+  theme(axis.text.x = element_text(angle = 45)) + 
+  guides(fill=guide_legend(title="date"))
+```
+
+# Analysis
+## Question 1: Are users more active on a particular day of the week?
+To answer this question, the analyst creates a new data frame containing the days of the week and how much time users spent on each of the activeness categories (sedentary, lightly active, fairly active, very active). 
+```{r}
+df1 <- select(df0, day, daily_minutes_1sedentary, daily_minutes_2lightlyactive, daily_minutes_3fairlyactive, daily_minutes_4veryactive)
+```
+
+She drops the rows with no data for activeness. 
+```{r}
+df1 <- df1[!(is.na(df0$daily_minutes_4veryactive)), ]
+# The `daily_minutes_4veryactive` variable is used here, but any of the three related variables (daily_minutes_1sedentary, daily_minutes_2lightlyactive, daily_minutes_3fairlyactive) can also be used to drop the rows.
+```
+
+Let's have a look at the result.
+```{r}
+head(df1)
+```
+
+The analyst wants to create a [percent stacked bar chart](https://r-graph-gallery.com/48-grouped-barplot-with-ggplot2.html). To prepare data for chart drawing, she reshapes the data from wide to long format.
+```{r}
+df2 <- pivot_longer(df1, !day, names_to = "active_level", values_to = "minutes")
+```
+
+Let's look at the data after being reshaped.
+```{r}
+head(df2)
+```
+
+She draws a percent stacked bar chart to see the percentage of time users spent on different activeness levels.
+```{r}
+ggplot(df2, aes(x = factor(day), y = minutes, fill = active_level)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_x_discrete(labels=c("1" = "Sun", "2" = "Mon", "3" = "Tue", "4" = "Wed", "5" = "Thu", "6" = "Fri", "7" = "Sat")) + 
+  labs(x="day", y="percentage of time") +
+  scale_fill_discrete(labels=c("Sedentary", "Lightly active", "Fairly active", "Very active"))
+```
+
+Since sedentary activities takes up a large proportion of the users' time in a day, the analyst zooms in to focus on other activeness levels.
+```{r}
+ggplot(df2, aes(x = factor(day), y = minutes, fill = active_level)) +
+  geom_bar(position = "fill", stat = "identity") +
+  scale_x_discrete(labels=c("1" = "Sun", "2" = "Mon", "3" = "Tue", "4" = "Wed", "5" = "Thu", "6" = "Fri", "7" = "Sat")) + 
+  labs(x="day", y="percentage of time") +
+  scale_fill_discrete(labels=c("Sedentary", "Lightly active", "Fairly active", "Very active")) +
+  coord_cartesian(ylim = c(0, 0.20))
+```
+
+**Finding**: The users seemed to be most active on Saturdays and least active on Sundays.
+
+## Question 2: Is there a relationship between sedentary time and sleep duration?
+To answer this question, the analyst creates a new data frame containing daily sedentary time and sleep duration. 
+```{r}
+df3 <- select(df0, daily_minutes_1sedentary, daily_minutes_asleep)
+```
+
+She drops the rows with no data for sleep. 
+```{r}
+df3 <- df3[!(is.na(df0$daily_minutes_asleep)), ]
+```
+
+Let's have a look at the result.
+```{r}
+head(df3)
+```
+
+She draws a [scatterplot](https://r-graph-gallery.com/272-basic-scatterplot-with-ggplot2.html) to see the relationship.
+```{r}
+ggplot(data=df3, aes(x=daily_minutes_1sedentary, y=daily_minutes_asleep)) +
+  geom_point() + geom_smooth() +
+  labs(x="minutes being sedentary", y="minutes asleep")
+```
+
+**Finding**: The trend suggests a negative correlation between the amount of sedentary time and the amount of sleep.
+
+The analyst is aware that correlation does not imply causation. The following explanations are possible and shall be further investigated: 
+
+* When people are more sedentary during the day, they have shorter sleep at night. In other words, being active may help people sleep longer at night.
+* When people have shorter sleep at night, they become less active during the day, potentially due to tiredness.
+
+# Findings and suggestions
+The analyst finds two trends from the wellness data.
+
+* The users seemed to be most active on Saturdays and least active on Sundays.
+* There is a negative correlation between the amount of sedentary time and the amount of sleep.
+
+Before providing suggestions based on the finding, it is worth reminding about limitation of the data:
+
+* These data were collected in 2016, six years before the time of analysis, and users' behavior may have changed since then. 
+* The data span over only one month in April-May. User's behavior may be different in other seasons.
+* The data come from 33 users, which is considered a small sample size.
+
+
+The stakeholder asked: How could these trends apply to Bellabeat customers? How could these trends help influence Bellabeat marketing strategy?
+
+Assuming that these data are representative of Bellabeat customers and users of high-tech wellness products in general, the analyst's suggestions include:
+
+* Bellabeat **creates an advertising campaign and a social media hashtag such as #SportySunday to encourage people to be more active on Sundays.** 
+* Bellabeat conducts more research on the relationship between sedentary activities and sleep. If it is found that sedentary activities lead to poorer sleep, the company can **market on the its products' functionality to remind users to get active when they are sedentary for a certain period of time.**
