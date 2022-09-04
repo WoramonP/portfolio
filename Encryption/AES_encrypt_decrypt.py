@@ -1,7 +1,7 @@
 """
-    The following code generates a new AES128 key, encrypts a unicode string, and decrypts it.
-    Author: Woramon P.
-    Date: 3/12/22
+The following code generates a new AES128 key, encrypts a unicode string, and decrypts it.
+Author: Woramon P.
+Date: 3/12/22
 """
 
 # pip install pycryptodome
