@@ -7,9 +7,9 @@ This code mainly uses *NLTK*, *wordcloud* and *sklearn* libraries to:
 
 Data source: https://www.kaggle.com/datasets/sid321axn/amazon-alexa-reviews
 
-# Example
-Here are the wordcloud results for positive and negative reviews.
+# Result
+The machine learning classification report can be found in *classification_report.txt*.
+
+Below are the wordcloud results for positive and negative reviews.
 ![positive reviews](wordcloud_positive_reviews.jpg)
 ![negative reviews](wordcloud_negative_reviews.jpg)
-
-The machine learning classification report can be found in *classification_report.txt*.
