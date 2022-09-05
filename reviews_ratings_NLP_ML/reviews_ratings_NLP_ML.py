@@ -2,8 +2,8 @@
 This code:
 - performs text cleaning for Amazon Alexa reviews: remove punctuation, remove stop words, convert to lower case
 - draws word clouds for positive and negative reviews
-- train three machine learning models to predict ratings based on review texts
-- test machine learning models' performances
+- trains three machine learning models to predict ratings based on review texts
+- tests machine learning models' performances
 
 The code is adapted from a hands-on project NLP: Twitter Sentiment Analysis
 https://www.coursera.org/projects/twitter-sentiment-analysis
